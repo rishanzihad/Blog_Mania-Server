@@ -10,7 +10,7 @@ app.use(express.json())
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qjppvab.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -58,6 +58,26 @@ async function run() {
     const result =await commentCollection.find().toArray()
     res.send(result)
 })
+app.put('/blogs/:id',async(req,res)=>{
+  const id =req.params.id
+  const data =req.body
+
+  const filter ={_id:  new ObjectId (id) }
+  const options ={upsert:true}
+  const updatedData ={
+    $set:{
+      image:data.image,
+      title:data.title,
+     category:data.category,
+      shortDescription:data.shortDescription,
+      longDescription:data.longDescription,
+      
+    }
+  }
+  const result =await blogCollection.updateOne(filter,updatedData,options)
+  res.send(result)
+})
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
