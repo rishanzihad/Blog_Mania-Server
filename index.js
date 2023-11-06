@@ -28,11 +28,19 @@ async function run() {
     //await client.connect();
     const blogCollection =client.db("Blogs").collection("Blogs")
     const commentCollection =client.db("Comments").collection("Comments")
+    const wishListCollection =client.db("wishlist").collection("wishlist")
 
     app.post('/blogs',async(req,res)=>{
         const blog =req.body
-        console.log(blog)
+        
         const result =await blogCollection.insertOne(blog)
+      
+        res.send(result)
+    })
+    app.post('/wishlist',async(req,res)=>{
+        const blog =req.body
+        console.log(blog)
+        const result =await wishListCollection.insertOne(blog)
       
         res.send(result)
     })
