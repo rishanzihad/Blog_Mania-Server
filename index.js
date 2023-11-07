@@ -56,7 +56,27 @@ async function run() {
     const blogCollection =client.db("Blogs").collection("Blogs")
     const commentCollection =client.db("Comments").collection("Comments")
     const wishListCollection =client.db("wishlist").collection("wishlist")
-
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      console.log('user for token', user);
+    
+      if (!user) {
+        return res.status(400).send({ success: false, message: 'Invalid user data' });
+      }
+    
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      console.log(token)
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        // sameSite: "none"
+      }).send({ success: true });
+    });
+  app.post('/logout',async(req,res)=>{
+      const user = req.body
+      console.log('logging Out ',user)
+      res.clearCookie('token',{maxAge:0}).send({success:true})
+  })
     app.post('/blogs',async(req,res)=>{
         const blog =req.body
         
@@ -80,9 +100,15 @@ async function run() {
         if(req.query?.email){
             query ={email:req.query.email}
         }
-      const result =await wishListCollection.find().toArray()
+      const result =await wishListCollection.find(query).toArray()
       res.send(result)
   })
+  app.delete('/wishlist/:id',async(req,res)=>{
+    const id =req.params.id
+    const query ={_id: new ObjectId(id)}
+    const result =await wishListCollection.deleteOne(query)
+    res.send(result)
+})
     app.get('/blogs',async(req,res)=>{  
         const result =await blogCollection.find().toArray()
         res.send(result)
