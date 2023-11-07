@@ -1,11 +1,17 @@
 const express =require("express")
 const cors =require('cors')
+const cookieParser =require("cookie-parser")
 const app =express()
 require('dotenv').config()
+const jwt =require("jsonwebtoken")
 
-app.use(cors())
+
+app.use(cors({
+  origin:['http://localhost:5173'],
+  credentials:true
+}));
 app.use(express.json())
-  
+app.use(cookieParser())
   const port =process.env.PORT || 3006
 
 
@@ -21,6 +27,27 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+const logger=async(req,res,next)=>{
+  console.log('called',req.host,req.originalUrl)
+  next()
+}
+const verifyToken=async(req,res,next)=>{
+  const token =req.cookies?.token
+  if(!token){
+      return res.status(401).send({message:'forbidden'})
+  }
+  jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+      if(err){
+          return res.status(401).send({message:'unauthorized'})
+      }
+      console.log('value',decoded)
+      req.user=decoded
+      next()
+  })
+ 
+ 
+}
 
 async function run() {
   try {
@@ -39,12 +66,20 @@ async function run() {
     })
     app.post('/wishlist',async(req,res)=>{
         const blog =req.body
+        
         console.log(blog)
         const result =await wishListCollection.insertOne(blog)
       
         res.send(result)
     })
-    app.get('/wishlist',async(req,res)=>{  
+    app.get('/wishlist',logger,verifyToken,async(req,res)=>{  
+      if(req.query.email !== req.user.email){
+        return res.status(403).send({message:"forbiden"})
+    }
+    let query ={}
+        if(req.query?.email){
+            query ={email:req.query.email}
+        }
       const result =await wishListCollection.find().toArray()
       res.send(result)
   })
