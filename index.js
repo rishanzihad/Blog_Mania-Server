@@ -4,15 +4,20 @@ const cookieParser =require("cookie-parser")
 const app =express()
 require('dotenv').config()
 const jwt =require("jsonwebtoken")
+const port =process.env.PORT || 3006
 
 
 app.use(cors({
-  origin:['http://localhost:5173'],
+  origin:[
+    '*',
+    'http://localhost:5173'
+  ],
   credentials:true
 }));
+
 app.use(express.json())
 app.use(cookieParser())
-  const port =process.env.PORT || 3006
+
 
 
 
@@ -69,7 +74,7 @@ async function run() {
       res.cookie("token", token, {
         httpOnly: true,
         secure: true,
-        // sameSite: "none"
+         sameSite: "none"
       }).send({ success: true });
     });
   app.post('/logout',async(req,res)=>{
